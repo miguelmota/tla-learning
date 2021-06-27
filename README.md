@@ -50,7 +50,7 @@ Lesson 1
 - An execution is represented as a sequence of states.
 - A step is the change from one state to the next.
 - TLA+ describes a state as an assignment of values to variables.
-- A behavior is a sequence of states
+- A behavior is an infinite sequence of states
 - An execution is represented as a behavior
 - We want to specify all possible behaviors of a system
 - A state machine is described by:
@@ -262,7 +262,8 @@ Lesson 8
 
 Lesson 9
 
-- Tuples are simply finite sequences
+- List are finite sequences.
+- Tuples are simply finite sequences.
 - _<< -3, "xyz", {0,2} >>_ is a sequence of length _3_
 - A sequence of length _N_ is a function with domain _1..N_
   - _<< -3, "xyz", {0,2} >>[1] = -3_
@@ -289,6 +290,66 @@ Lesson 9
   - _Seq({3}) = {<<>>, <<3>>, <<3,3>>, <<3,3,3>>, ...}_ (infinite sequences)
 - _Remove(i, seq) == [j \in 1..(Len(seq) - 1) |-> IF j < i THEN seq[j] ELSE seq[j + 1]]_
 - _Len(Remove(i, seq)) = Len(seq) -1_
+- The Cartesian Product
+  - For any sets _S_ and _T_
+    - _S × T_ equals the set of all _<<a, b>>_ with _a ∈ S_ and _b ∈ T_
+    - _S × T = {<<a, b>>: a \in S, b \in T}_
+  - The _×_ (times) operator is written as _\\X_ in ASCII.
+- A _Safety Formula_ is a temporal formula that asserts only what _may_ happen.
+  - It's a temporal formula that if a behavior violates it, then that violation occurs at some particular point in that behavior.
+    - Nothing past that point can prevent the violation.
+      - For example:
+        - _Init /\ [][Next]vars_ can be violated either:
+          - Initial state not satisfying _Init_
+          - Step not satisfying _[Next]vars_
+            - Step neither satisfies _Next_ nor leaves _vars_ unchanged.
+        - Nothing past that point of violation can cause the formula to be true.
+- A _Liveness Formula_ is a temporal formula that asserts only what _must_ happen.
+  - A temporal formula that a behavior can _not_ violate it at any point.
+  - Example: _x = 5_ on some state of the behavior.
+    - asserted by _(x = 5)_
+    - _◊_ is typed as _<>_ is ASCII and is pronounced _eventually_
+- The only liveness property sequential programs must satisfy is _termination_.
+  - Expressed by formual _◊Terminated_
+- is _~>_ is ASCII and means _leads to_.
+- _◊P_ is equivalent to _¬⎕¬P_
+  - Eventually _P_ is equal to _not always not P_.
+- An action _A_ is _enabled_ in a state _s_ if-and-only-if there is a state _t_ such that _s → t_ is an _A_ step.
+- An action is enabled if the system is not in a deadlocked/terminated state. The safety part of the spec implies that such a state cannot be reached.
+- A conjunct with no primes is an assertion.
+- A weak fairness of action _A_ asserts of a behavior:
+  - If _A_ ever remains continiously enabled, then an _A_ step must eventually occur.
+  - Or equivalenty:
+    - _A_ cannot remain enabled forever without another _A_ step occuring.
+- Weak fairness of _A_ is written as the temporal formula _WF_vars(A)_, where _vars_ is the tuple of all the spec's variables.
+  - It's a _liveness property_ because it can always be made _true_ by an _A_ step or a state in which _A_ is not enabled.
+- A spec with liveness is written
+  - _Init /\ [][Next]_vars /\ Fairness_
+    - _Fairness_ ia conjunction of one or more _WF_vars(A)_ and _SF_vars(A)_ formulas,
+    where each _A_ is a subaction of _Next_.
+  - A subaction of _Next_ is when every possible _A_ step is a _Next_ step.
+- _WF_vars(A)_ asserts of a behavior:
+  - If _A /\ (vars' # vars)_ ever remains continiously enabled:
+    - then an _A /\ (vars' # vars)_ step must eventually occur.
+  - An _A /\ (vars' # vars)_ step is a non-stuterring _A_ step
+- _ABS == INSTANCE ABSpec_
+  - Imports all definitions of _Spec,..._ from _ABSpec_,
+    renamed as _ABS!Spec,..._
+- _THEOREM Spec => ABS!Spec_
+  - This theorem states that the safety specification _Spec_ implements it's high level safety specification _ABS!Spec_
+- Weak fairness of _A_ asserts of a behavior:
+  - If _A_ ever remains continiously enabled, then an _A_ step must eventually occur.
+- Strong fairness of action _A_ asserts of a behavior:
+  - If _A_ is repeatedly enabled, then an _A_ step must eventually occur.
+  - Or equivalently:
+    - _A_ cannot be repeatedly enabled forever, without another _A_ step occuring.
+- For systems without hard real-time response requirements, liveness checking is a useful way to find errors that prevent things from happening.
+- Many systems use timeouts only to ensure that something must happen.
+  - Correctness of such a system does not depend on how long it takes the timeouts to occur.
+  - Specifications of these systems can describe timeouts as actions with not time constraints, only weak fairness conditions.
+  - This is true for most systems with no bounds on how long it can take an enabled operation to occur.
+- A reason to add liveness is to catch errors in the safetey formula _Spec_.
+
 
 Ron Pressler course notes
 
@@ -401,28 +462,30 @@ pdflatex program.tex
 ## Resources
 
 - http://lamport.azurewebsites.net/video/videos.html
-- https://github.com/Disalg-ICS-NJU/tlaplus-lamport-projects
-- https://github.com/quux00/PlusCal-Examples
-- https://github.com/sanjosh/tlaplus
-- https://github.com/lostbearlabs/tiny-tlaplus-examples
-- https://github.com/pmer/tla-bin
+- https://lamport.azurewebsites.net/tla/summary-standalone.pdf
+- http://lamport.azurewebsites.net/tla/book-02-08-08.pdf
+- https://lamport.azurewebsites.net/tla/p-manual.pdf
+- https://www.hpl.hp.com/techreports/Compaq-DEC/SRC-TN-1997-006A.pdf
 - https://pron.github.io/tlaplus
 - https://pron.github.io/posts/tlaplus_part1
-- https://github.com/hwayne/tla-snippets
 - https://roscidus.com/blog/blog/2019/01/01/using-tla-plus-to-understand-xen-vchan/
 - https://surfingcomplexity.blog/2014/06/04/crossing-the-river-with-tla/
 - https://sookocheff.com/post/tlaplus/getting-started-with-tlaplus/
 - https://www.binwang.me/2020-10-06-Understand-Liveness-and-Fairness-in-TLA.html
 - https://docs.imandra.ai/imandra-docs/notebooks/a-comparison-with-tla-plus/
 - https://weblog.cs.uiowa.edu/cs5620f15/PlusCal
-- http://lamport.azurewebsites.net/tla/book-02-08-08.pdf
-- https://lamport.azurewebsites.net/tla/p-manual.pdf
 - https://learntla.com/pluscal/a-simple-spec/
-- https://github.com/dgpv/SASwap_TLAplus_spec
 - https://jack-vanlightly.com/blog/2019/1/27/building-a-simple-distributed-system-formal-verification
 - https://tla.msr-inria.inria.fr/tlatoolbox/doc/model/overview-page.html
 - https://link.springer.com/content/pdf/bbm%3A978-1-4842-3829-5%2F1.pdf
 - https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.519.6413&rep=rep1&type=pdf
+- https://github.com/Disalg-ICS-NJU/tlaplus-lamport-projects
+- https://github.com/quux00/PlusCal-Examples
+- https://github.com/sanjosh/tlaplus
+- https://github.com/lostbearlabs/tiny-tlaplus-examples
+- https://github.com/pmer/tla-bin
+- https://github.com/hwayne/tla-snippets
+- https://github.com/dgpv/SASwap_TLAplus_spec
 - [Lamport TLA+ Course Lectures](https://www.youtube.com/watch?v=p54W-XOIEF8&list=PLWAv2Etpa7AOAwkreYImYt0gIpOdWQevD&index=3)
 - [Leslie Lamport: Thinking Above the Code](https://www.youtube.com/watch?v=-4Yp3j_jk8Q)
 
